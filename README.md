@@ -2,6 +2,22 @@
 
 This repository implements a research project on **Concept Bottleneck Models (CBMs)** for chest X-ray diagnosis.
 
+## Live demo
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://clinically-grounded-concept-bottleneck-model-uayq9oadkjfavuigr.streamlit.app/)
+
+**Clinically Grounded CBM — Chest X-ray analysis**
+
+<https://clinically-grounded-concept-bottleneck-model-uayq9oadkjfavuigr.streamlit.app/>
+
+Upload a chest X-ray and the Spatial CBM shows the six concept probabilities,
+concept-specific evidence maps, the diagnosis from the concept bottleneck and a
+deterministic, model-derived explanation — no LLM is used. The deployed
+checkpoint is the trained Spatial CBM; all numbers shown are actual model
+outputs.
+
+> **Research prototype — not for clinical diagnosis or treatment decisions.**
+
 ## Research motivation
 
 Standard CBMs map images to a compact set of high-level concepts and then predict a target from that concept vector. This improves interpretability, but the concepts are typically predicted from global image features, so the model can be right for the wrong reasons:
