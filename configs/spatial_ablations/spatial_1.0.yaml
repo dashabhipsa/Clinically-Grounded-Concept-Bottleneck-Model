@@ -1,0 +1,26 @@
+# Ablation E: Spatially Grounded CBM with a soft grounding weight of 1.0.
+# Loaded together with configs/base.yaml (base first, then this file).
+
+experiment: spatial_cbm
+
+model:
+  encoder: densenet121
+  pretrained: true
+  concept_activation: sigmoid
+  concept_pool: avg
+  grounding:
+    weight: 1.0
+    background_weight: 0.0
+    mask_smoothing_sigma: 0.0
+    box_corruption: correct
+
+data:
+  augment: false
+
+training:
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  patience: 5
+  lambda_concept: 1.0
+  lambda_diagnosis: 1.0

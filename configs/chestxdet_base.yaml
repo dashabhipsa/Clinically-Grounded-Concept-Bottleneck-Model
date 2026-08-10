@@ -1,0 +1,77 @@
+# Preliminary ChestX-Det subset experiment (fast-track, Phase 2/3 analysis).
+# Dataset: natealberti/ChestX-Det (Hugging Face) -- NOT VinDr-CXR.
+# Loaded together with a per-experiment override file:
+#   chestxdet_blackbox.yaml / chestxdet_cbm.yaml / chestxdet_spatial_cbm.yaml
+
+seed: 42
+device: auto
+
+chestxdet:
+  repo_id: "natealberti/ChestX-Det"
+  # Deterministic streaming subsets for the fast experiment.
+  n_train: 500
+  n_val: 100
+  n_test: 200
+  # Box strategy selected in the pre-training validation (Strategy B).
+  box_strategy: "B_label_components"
+  min_component_area_fraction: 0.0005
+
+data:
+  image_size: 256
+  batch_size: 8
+  num_workers: 0
+  augment: false
+  normalize:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+
+# 8 project concepts; 6 map to ChestX-Det classes, 2 (lung_opacity, edema)
+# have no ChestX-Det source and stay all-zero (see chestxdet_concepts.yaml).
+concepts:
+  - cardiomegaly
+  - pleural_effusion
+  - consolidation
+  - lung_opacity
+  - edema
+  - atelectasis
+  - pneumothorax
+  - nodule_mass
+
+# ChestX-Det has no independent global diagnostic labels; the diagnosis
+# vector is derived from the same pixel-level findings as the concepts.
+diagnoses:
+  - cardiomegaly
+  - pleural_effusion
+  - consolidation
+  - lung_opacity
+  - edema
+  - atelectasis
+  - pneumothorax
+  - nodule_mass
+
+model:
+  encoder: densenet121
+  pretrained: true
+  # CPU-only run: keep the ImageNet backbone frozen and train only the
+  # concept / diagnosis heads (preliminary comparison experiment).
+  freeze_backbone: true
+  concept_activation: sigmoid
+
+training:
+  epochs: 3
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  patience: 2
+  mixed_precision: false
+  early_stopping: true
+  scheduler: reduce_on_plateau
+  monitor_metric: diagnosis_auroc_macro
+
+evaluation:
+  threshold: 0.5
+  cam_threshold: 0.5
+
+outputs:
+  chestxdet_dir: "outputs/chestxdet_fasttrack"
+  report_dir: "outputs/reports"
+  log_dir: "outputs/logs"

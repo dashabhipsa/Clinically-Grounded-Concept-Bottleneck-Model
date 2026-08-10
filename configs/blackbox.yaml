@@ -1,0 +1,22 @@
+# Black-box diagnostic baseline experiment.
+# Loaded together with base.yaml (base first, then this file).
+
+experiment: blackbox
+
+model:
+  encoder: densenet121
+  pretrained: true
+
+training:
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  patience: 5
+
+evaluation:
+  # Post-hoc Grad-CAM explanation examples (black-box baseline only).
+  gradcam:
+    enabled: true
+    num_examples: 8
+    # Leave null to auto-detect the last convolutional layer.
+    target_layer: null

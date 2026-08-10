@@ -1,0 +1,43 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local caches (D:-drive only for HF/torch/temp)
+.cache/
+
+# Data (large, downloaded)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Generated outputs
+outputs/*
+!outputs/.gitkeep
+
+# Splits are generated reproducibly by scripts/prepare_data.py
+data/splits/*
+!data/splits/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.lnk
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Pytest
+.pytest_cache/
+
+# Logs
+*.log

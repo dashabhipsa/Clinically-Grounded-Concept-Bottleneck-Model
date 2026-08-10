@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clinically-grounded-cbm"
+version = "0.1.0"
+description = "Beyond Concept Prediction: Clinically Grounded and Spatially Faithful Concept Bottlenecks for Chest X-ray Diagnosis"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "pydicom>=2.3.0",
+    "Pillow>=9.0.0",
+    "numpy>=1.23.0",
+    "pandas>=1.5.0",
+    "scikit-learn>=1.2.0",
+    "PyYAML>=6.0",
+    "matplotlib>=3.6.0",
+    "pytest>=7.0.0",
+    "tqdm>=4.64.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+exclude = ["tests*", "notebooks*", "configs*", "scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

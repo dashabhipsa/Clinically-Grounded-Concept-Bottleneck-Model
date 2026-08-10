@@ -1,0 +1,100 @@
+# Base configuration shared by all experiments.
+# Individual experiment configs (blackbox.yaml, cbm.yaml) override this.
+
+seed: 42
+
+# "auto" -> cuda if available, else cpu.
+device: auto
+
+data:
+  # Absolute path to the downloaded VinDr-CXR dataset (PhysioNet).
+  # Expected layout (v1.0.0):
+  #   <root>/images/*.dicom
+  #   <root>/annotations/train.csv
+  #   <root>/annotations/test.csv
+  #   <root>/annotations/image_labels_train.csv
+  #   <root>/annotations/image_labels_test.csv
+  #   <root>/metadata.csv
+  root: "/path/to/vindr-cxr"
+  image_size: 512
+  batch_size: 16
+  num_workers: 4
+  # Fraction of the *official training set* held out for validation.
+  val_fraction: 0.1
+  # Seed used to build the reproducible train/val split.
+  split_seed: 42
+  # Where split CSV files are written (project-relative).
+  splits_dir: "data/splits"
+  # ImageNet statistics used to normalize the 3-channel image.
+  normalize:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  # Light augmentation for training (random flip / small affine).
+  augment: true
+
+# Radiographic findings treated as *concepts* (the bottleneck layer).
+# These are derived from the VinDr-CXR local (bounding-box) annotations.
+# NOTE: "edema" is NOT a VinDr-CXR annotation class and will always be
+# absent; it is kept here to demonstrate that missing findings are handled
+# as all-zeros concept vectors.
+concepts:
+  - cardiomegaly
+  - pleural_effusion
+  - consolidation
+  - lung_opacity
+  - edema
+  - atelectasis
+  - pneumothorax
+  - nodule_mass
+
+# Global diagnostic labels predicted by the diagnosis head.
+# These are the VinDr-CXR global labels (image_labels_*.csv), kept
+# strictly separate from the concept layer.
+diagnoses:
+  - aortic_enlargement
+  - atelectasis
+  - calcification
+  - cardiomegaly
+  - consolidation
+  - ild
+  - infiltration
+  - lung_opacity
+  - nodule_mass
+  - other_lesion
+  - pleural_effusion
+  - pleural_thickening
+  - pneumothorax
+  - pulmonary_fibrosis
+
+model:
+  # Supported encoders: densenet121, densenet169, densenet201,
+  # resnet50, resnet101.
+  encoder: densenet121
+  pretrained: true
+  # Activation applied to concept logits to form the concept vector z
+  # fed into the diagnosis head. Options: sigmoid | none.
+  concept_activation: sigmoid
+
+training:
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  patience: 5
+  mixed_precision: true
+  early_stopping: true
+  scheduler: reduce_on_plateau
+  # CBM only: weighting of concept vs. diagnosis loss terms.
+  lambda_concept: 1.0
+  lambda_diagnosis: 1.0
+  # Metric monitored for early stopping / checkpoint selection.
+  monitor_metric: diagnosis_auroc_macro
+
+evaluation:
+  threshold: 0.5
+
+outputs:
+  checkpoint_dir: "outputs/checkpoints"
+  metrics_dir: "outputs/metrics"
+  predictions_dir: "outputs/predictions"
+  figures_dir: "outputs/figures"
+  log_dir: "outputs/logs"

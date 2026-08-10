@@ -1,0 +1,8 @@
+# Black-box diagnostic baseline on the ChestX-Det subset.
+# Loaded together with configs/chestxdet_base.yaml.
+
+experiment: blackbox
+
+model:
+  encoder: densenet121
+  pretrained: true

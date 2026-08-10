@@ -1,0 +1,46 @@
+# ChestX-Det -> project concept mapping (pre-training validation).
+#
+# Maps the 13 ChestX-Det disease classes (id2label.json) onto the project's
+# 8 concept names. Only defensible mappings are used:
+#
+#   * Exact-name matches: Atelectasis, Cardiomegaly, Consolidation,
+#     Pneumothorax.
+#   * Explicitly sanctioned equivalents: Effusion -> pleural_effusion,
+#     Mass + Nodule -> nodule_mass.
+#
+# The remaining project concepts (lung_opacity, edema) have NO ChestX-Det
+# counterpart and are intentionally left unmapped: their concept vectors will
+# be all-zeros when ChestX-Det is used. No invented mappings are added.
+
+chestx_det_repo: "natealberti/ChestX-Det"
+
+# project concept -> list of ChestX-Det class names (as in id2label.json)
+concept_mapping:
+  atelectasis:
+    - Atelectasis
+  cardiomegaly:
+    - Cardiomegaly
+  consolidation:
+    - Consolidation
+  pleural_effusion:
+    - Effusion
+  nodule_mass:
+    - Mass
+    - Nodule
+  pneumothorax:
+    - Pneumothorax
+
+# Project concepts with no ChestX-Det source class (must remain all-zeros).
+unavailable_concepts:
+  - lung_opacity
+  - edema
+
+# ChestX-Det classes that do not map onto any project concept and are ignored
+# by this adapter when the 8-concept set is requested.
+ignored_chestx_det_classes:
+  - Calcification
+  - Diffuse Nodule
+  - Emphysema
+  - Fibrosis
+  - Fracture
+  - Pleural Thickening

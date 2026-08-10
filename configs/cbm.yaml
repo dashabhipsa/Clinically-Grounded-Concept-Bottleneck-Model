@@ -1,0 +1,21 @@
+# Standard Concept Bottleneck Model (CBM) experiment.
+# Loaded together with base.yaml (base first, then this file).
+
+experiment: cbm
+
+model:
+  encoder: densenet121
+  pretrained: true
+  concept_activation: sigmoid
+
+training:
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  patience: 5
+  lambda_concept: 1.0
+  lambda_diagnosis: 1.0
+
+evaluation:
+  # Report per-concept AUROC/AUPRC/F1/etc.
+  concept_metrics: true
