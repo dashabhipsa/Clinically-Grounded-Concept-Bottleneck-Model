@@ -16,6 +16,10 @@ deterministic, model-derived explanation — no LLM is used. The deployed
 checkpoint is the trained Spatial CBM; all numbers shown are actual model
 outputs.
 
+> **Dataset note:** the deployed prototype checkpoint was trained on a small
+> **ChestX-Det** subset (3 epochs, see [Dataset](#dataset)), not on VinDr-CXR.
+> It is a research prototype, not a production-grade model.
+
 > **Research prototype — not for clinical diagnosis or treatment decisions.**
 
 ## Research motivation
@@ -28,6 +32,25 @@ Standard CBMs map images to a compact set of high-level concepts and then predic
 Later phases of this project make concept predictions **clinically grounded** (the concepts are standard radiographic findings) and **spatially faithful** (the concept evidence must localize to the corresponding pathology, enforced with the provided bounding-box annotations). This phase lays the foundation: a clean data pipeline, a black-box baseline, a Grad-CAM post-hoc baseline, and a standard CBM to compare against.
 
 ## Dataset
+
+Two datasets are relevant — one actually used for the deployed prototype, one
+that this project targets for full-scale experiments.
+
+### 1. ChestX-Det — dataset of the deployed prototype
+
+**[ChestX-Det](https://huggingface.co/datasets/natealberti/ChestX-Det)** (`natealberti/ChestX-Det`, Hugging Face) is what the **deployed Spatial CBM was actually trained on**. It is a subset of **NIH ChestX-ray14** (~3,500 images, 13 disease classes) with per-pixel class maps and per-instance segmentations.
+
+* The deployed checkpoint is a **preliminary 3-epoch subset run**
+  (`scripts/train_chestxdet.py`, `outputs/chestxdet_fasttrack`), so the demo
+  shows real but **low-quality** model outputs.
+* 6 of the 8 project concepts map to ChestX-Det classes; `lung_opacity` and
+  `edema` have no ChestX-Det source and stay all-zero.
+* ChestX-Det has **no independent global diagnosis labels**: diagnosis vectors
+  are derived from the same pixel-level findings as the concepts.
+* Streaming, remote — no local download required
+  (`configs/chestxdet_base.yaml`, `chestxdet.repo_id`).
+
+### 2. VinDr-CXR — target dataset for full-scale experiments
 
 **[VinDr-CXR](https://physionet.org/content/vindr-cxr/1.0.0/)** (PhysioNet), a large public dataset of frontal chest X-rays with radiologist annotations.
 
@@ -81,10 +104,21 @@ For GPU training, install the matching CUDA build of PyTorch from <https://pytor
 
 ## Dataset setup
 
+### ChestX-Det (used by the deployed prototype)
 
+No local download is required — the data is streamed from Hugging Face:
 
+```bash
+python scripts/train_chestxdet.py --only spatial_cbm --epochs 3
+```
 
-Extract it and set its path in `configs/base.yaml`:
+Subset sizes and the repo id are configured in `configs/chestxdet_base.yaml`
+under `chestxdet.*`.
+
+### VinDr-CXR (target dataset)
+
+Download [VinDr-CXR](https://physionet.org/content/vindr-cxr/1.0.0/) from
+PhysioNet, extract it and set its path in `configs/base.yaml`:
 
 ```yaml
 data:
@@ -261,8 +295,9 @@ Tests use a small synthetic VinDr-CXR tree with valid DICOM files — **no real 
 
 ---
 
-## Limitations (Phase 1)
+## Limitations
 
+* The **deployed prototype** was trained on a small **ChestX-Det** subset (3 epochs, `scripts/train_chestxdet.py`), so its outputs are real but low-quality; a full-scale VinDr-CXR or larger ChestX-Det training run is needed for meaningful results.
 * `edema` has no VinDr-CXR annotations and will always be an absent concept (see Dataset setup).
 * Concept vectors are derived from bounding-box *presence* only; box coordinates are loaded and preserved but **not** used in training yet.
 * The CBM is the standard, non-spatial baseline; there is no grounding loss or intervention yet.
