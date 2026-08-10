@@ -19,8 +19,17 @@ data/processed/*
 !data/processed/.gitkeep
 
 # Generated outputs
+# NOTE: only the trained Spatial CBM checkpoint ships with the app so that
+# hosted deployments (Streamlit Cloud) work out of the box without training.
 outputs/*
 !outputs/.gitkeep
+!outputs/chestxdet_fasttrack/
+outputs/chestxdet_fasttrack/*
+!outputs/chestxdet_fasttrack/checkpoints/
+outputs/chestxdet_fasttrack/checkpoints/*
+!outputs/chestxdet_fasttrack/checkpoints/spatial_cbm/
+outputs/chestxdet_fasttrack/checkpoints/spatial_cbm/*
+!outputs/chestxdet_fasttrack/checkpoints/spatial_cbm/best_model.pth
 
 # Splits are generated reproducibly by scripts/prepare_data.py
 data/splits/*
