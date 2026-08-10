@@ -1,31 +1,15 @@
 # Beyond Concept Prediction: Clinically Grounded and Spatially Faithful Concept Bottlenecks for Chest X-ray Diagnosis
 
-This repository implements a research project on **Concept Bottleneck Models (CBMs)** for chest X-ray diagnosis. It is being built in three phases:
-
-| Phase | Scope | Status |
-| ----- | ----- | ------ |
-| **1** | VinDr-CXR pipeline, black-box baseline, Grad-CAM baseline, standard CBM, evaluation framework, config system, tests | **This repository** |
-| 2 | Spatial grounding, grounding loss, box-driven concept localization | Not implemented yet |
-| 3 | Intervention experiments, concept/box corruption, Streamlit dashboard | Not implemented yet |
-
-> **Phase 2 / 3 items are intentionally absent.** This phase does not implement spatial grounding, intervention, or corruption experiments.
-
----
+This repository implements a research project on **Concept Bottleneck Models (CBMs)** for chest X-ray diagnosis.
 
 ## Research motivation
 
-Standard CBMs map images to a compact set of high-level concepts and then predict a target from that concept vector. This improves interpretability, but the concepts are typically predicted from *global* image features, so the model can be right for the wrong reasons:
+Standard CBMs map images to a compact set of high-level concepts and then predict a target from that concept vector. This improves interpretability, but the concepts are typically predicted from global image features, so the model can be right for the wrong reasons:
 
 * the *presence* of a finding may be correct while its *spatial location* is wrong, and
 * the diagnosis head cannot be interrogated locally ("why here, why now?").
 
 Later phases of this project make concept predictions **clinically grounded** (the concepts are standard radiographic findings) and **spatially faithful** (the concept evidence must localize to the corresponding pathology, enforced with the provided bounding-box annotations). This phase lays the foundation: a clean data pipeline, a black-box baseline, a Grad-CAM post-hoc baseline, and a standard CBM to compare against.
-
-The central hypothesis, to be tested in later phases:
-
-> Spatially supervised concept bottlenecks retain (or improve) diagnostic performance while producing concepts that are faithful to anatomy and therefore trustworthy in practice.
-
----
 
 ## Dataset
 
@@ -58,12 +42,6 @@ pulmonary_fibrosis
 
 * **Diagnoses** (the diagnosis head targets) are the global diagnostic labels (all 14 classes). They are kept **strictly separate** from the concept layer.
 
-### Why the labels are what they are
-
-VinDr-CXR's global labels and local findings use the same 14 classes. In this project the *concept layer* is the **8-finding radiographic concept set** (derived from local findings / boxes), while the *diagnosis head* predicts the **global diagnostic labels** (14 classes). This separation is deliberate: a CBM that must predict 14 diagnoses through an 8-dimensional concept bottleneck is forced to compress information into interpretable findings.
-
----
-
 ## Installation
 
 ```bash
@@ -87,9 +65,8 @@ For GPU training, install the matching CUDA build of PyTorch from <https://pytor
 
 ## Dataset setup
 
-Download VinDr-CXR from PhysioNet (requires an account / signing the data use agreement — restricted data is **not** downloaded automatically):
 
-<https://physionet.org/content/vindr-cxr/1.0.0/>
+
 
 Extract it and set its path in `configs/base.yaml`:
 
@@ -99,17 +76,6 @@ data:
 ```
 
 Expected layout:
-
-```
-vindr-cxr/
-├── images/                     # *.dicom
-├── annotations/
-│   ├── train.csv               # bounding boxes (train)
-│   ├── test.csv                # bounding boxes (test)
-│   ├── image_labels_train.csv  # global labels (train)
-│   └── image_labels_test.csv   # global labels (test)
-└── metadata.csv
-```
 
 ### Prepare splits
 
