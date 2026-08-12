@@ -183,6 +183,20 @@ def make_loader(
     )
 
 
+def pos_weight_from_items(items: List[dict], key: str) -> List[float]:
+    """Per-class ``negatives/positives`` ratios for class-balanced BCE.
+
+    Computed from the *training* set so the majority-collapse (predicting
+    everything absent) is counterbalanced. Classes with no positive samples
+    get weight ``1.0``.
+    """
+    n = len(items)
+    arr = torch.stack([torch.as_tensor(it[key], dtype=torch.float32) for it in items])
+    pos = arr.sum(dim=0)
+    neg = n - pos
+    return torch.where(pos > 0, neg / pos, torch.ones_like(pos)).tolist()
+
+
 # --------------------------------------------------------------------------- #
 # Per-model train + evaluate + intervene + figure
 # --------------------------------------------------------------------------- #
@@ -196,6 +210,8 @@ def run_one_model(
     device,
     out_dir: Path,
     logger,
+    pos_weight_concepts: Optional[List[float]] = None,
+    pos_weight_diagnosis: Optional[List[float]] = None,
 ) -> Dict:
     """Train one model, evaluate on test, run interventions, write figures."""
     experiment = str(cfg.get("experiment"))
@@ -220,7 +236,11 @@ def run_one_model(
                 float(cfg.training.learning_rate))
 
     model = build_model(cfg).to(device)
-    loss_fn = build_loss_fn(experiment, cfg)
+    loss_fn = build_loss_fn(
+        experiment, cfg,
+        pos_weight_concepts=pos_weight_concepts,
+        pos_weight_diagnosis=pos_weight_diagnosis,
+    )
     metric_fn = build_metric_fn(experiment, cfg)
 
     trainer = Trainer(
@@ -600,6 +620,12 @@ def main() -> int:
         raise ValueError("--only must include at least one of blackbox,cbm,spatial_cbm")
 
     rows: Dict[str, Dict] = {}
+    pos_weight_concepts = pos_weight_from_items(train_ds.items, "concepts")
+    pos_weight_diagnosis = pos_weight_from_items(train_ds.items, "diagnosis")
+    logger.info(
+        "class-balanced BCE: concept pos_weight=%s",
+        [round(float(w), 3) for w in pos_weight_concepts],
+    )
     for model_name in order:
         cfg = load_config(args.base, experiment_map[model_name])
         apply_overrides(cfg, args.override)
@@ -610,6 +636,8 @@ def main() -> int:
             cfg, model_name,
             train_loader, val_loader, test_loader, test_ds,
             device, out_dir, logger,
+            pos_weight_concepts=pos_weight_concepts,
+            pos_weight_diagnosis=pos_weight_diagnosis,
         )
         bundle["total_time_sec"] = round(time.time() - t_start, 2)
         rows[model_name] = bundle

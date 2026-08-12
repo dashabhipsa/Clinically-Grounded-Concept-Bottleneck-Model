@@ -21,7 +21,7 @@ The ``grounding_weight`` is configurable (ablations 0.0 / 0.1 / 0.25 / 0.5 /
 """
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional, Sequence
 
 import numpy as np
 import torch
@@ -45,6 +45,8 @@ class SpatialGroundingLoss:
         box_corruption: str = "correct",
         seed: int = 42,
         eps: float = 1e-8,
+        pos_weight_concepts: Optional[Sequence[float]] = None,
+        pos_weight_diagnosis: Optional[Sequence[float]] = None,
     ):
         self.concept_names = list(concept_names)
         self.num_concepts = len(self.concept_names)
@@ -57,6 +59,16 @@ class SpatialGroundingLoss:
         self.eps = float(eps)
         # Deterministic corruption: one RNG seeded from the run seed.
         self.rng = np.random.RandomState(int(seed))
+        self.pos_weight_concepts = (
+            None
+            if pos_weight_concepts is None
+            else torch.as_tensor(list(pos_weight_concepts), dtype=torch.float32)
+        )
+        self.pos_weight_diagnosis = (
+            None
+            if pos_weight_diagnosis is None
+            else torch.as_tensor(list(pos_weight_diagnosis), dtype=torch.float32)
+        )
         self.criterion_c = nn.BCEWithLogitsLoss()
         self.criterion_d = nn.BCEWithLogitsLoss()
 
@@ -98,6 +110,16 @@ class SpatialGroundingLoss:
         """
         out = model(x)
 
+        device = x.device
+        if self.pos_weight_concepts is not None:
+            self.criterion_c = nn.BCEWithLogitsLoss(
+                pos_weight=self.pos_weight_concepts.to(device)
+            )
+        if self.pos_weight_diagnosis is not None:
+            self.criterion_d = nn.BCEWithLogitsLoss(
+                pos_weight=self.pos_weight_diagnosis.to(device)
+            )
+
         loss = self.lambda_concept * self.criterion_c(
             out.concept_logits, labels["concepts"]
         )
@@ -123,7 +145,7 @@ class SpatialGroundingLoss:
         return loss, outputs
 
 
-def build_spatial_loss_fn(config):
+def build_spatial_loss_fn(config, pos_weight_concepts=None, pos_weight_diagnosis=None):
     """Return a ``SpatialGroundingLoss`` configured from ``config``."""
     return SpatialGroundingLoss(
         concept_names=list(config.concepts),
@@ -138,4 +160,6 @@ def build_spatial_loss_fn(config):
         ),
         box_corruption=str(config.get("model.grounding.box_corruption", "correct")),
         seed=int(config.get("seed", 42)),
+        pos_weight_concepts=pos_weight_concepts,
+        pos_weight_diagnosis=pos_weight_diagnosis,
     )
