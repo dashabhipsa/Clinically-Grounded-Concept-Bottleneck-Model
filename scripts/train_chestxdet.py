@@ -522,6 +522,15 @@ def main() -> int:
     n_train = int(base_cfg.get("chestxdet.n_train", 500))
     n_val = int(base_cfg.get("chestxdet.n_val", 100))
     n_test = int(base_cfg.get("chestxdet.n_test", 200))
+    train_split_size = int(cxd.SPLIT_SIZES.get("train", 3025))
+    if n_train + n_val > train_split_size:
+        n_original = n_train
+        n_train = max(0, train_split_size - n_val)
+        logger.warning(
+            "n_train + n_val (%d + %d) exceeds the %d-sample train split; "
+            "capping n_train to %d (val split is the contiguous slice after train)",
+            n_original, n_val, train_split_size, n_train,
+        )
     box_strategy = str(base_cfg.get("chestxdet.box_strategy", "B_label_components"))
     min_area_frac = float(base_cfg.get("chestxdet.min_component_area_fraction", 0.0005))
     image_size = int(base_cfg.get("data.image_size", 256))
