@@ -15,9 +15,6 @@ model:
     mask_smoothing_sigma: 0.0
     box_corruption: correct
 
-data:
-  augment: false
-
 training:
   lambda_concept: 1.0
   lambda_diagnosis: 1.0

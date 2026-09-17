@@ -399,8 +399,27 @@ class ChestXDetRemoteDataset(IterableDataset):
             )
         return boxes_from_mask_instances(mask, label_map, image_id, self.id2label)
 
+    def _local_parquet(self):
+        """Path to locally pre-downloaded parquet for this split, if any.
+
+        Uses ``PROJECT_ROOT/.cache/chestxdet/data/`` populated by
+        ``scripts/download_chestxdet.py``. Loading from disk avoids the flaky
+        HF network streaming entirely.
+        """
+        project_root = Path(__file__).resolve().parents[2]
+        cache_dir = project_root / ".cache" / "chestxdet" / "data"
+        if self.split == "train":
+            candidate = cache_dir / "train-00000-of-00003.parquet"
+        else:
+            candidate = cache_dir / "test-00000-of-00001.parquet"
+        return candidate if candidate.exists() else None
+
     def __iter__(self) -> Iterator[dict]:
-        ds = load_dataset(self.repo_id, split=self.split, streaming=self.streaming)
+        local = self._local_parquet()
+        if local is not None:
+            ds = load_dataset("parquet", data_files=str(local), split="train", streaming=False)
+        else:
+            ds = load_dataset(self.repo_id, split=self.split, streaming=self.streaming)
         transform = self._default_transform() if self.transform is None else self.transform
         count = 0
         for row in ds:
@@ -414,7 +433,11 @@ class ChestXDetRemoteDataset(IterableDataset):
 
     def iter_raw(self) -> Iterator[dict]:
         """Yield raw decoded arrays for inspection (no image transform)."""
-        ds = load_dataset(self.repo_id, split=self.split, streaming=self.streaming)
+        local = self._local_parquet()
+        if local is not None:
+            ds = load_dataset("parquet", data_files=str(local), split="train", streaming=False)
+        else:
+            ds = load_dataset(self.repo_id, split=self.split, streaming=self.streaming)
         count = 0
         for row in ds:
             if self.max_samples is not None and count >= self.max_samples:

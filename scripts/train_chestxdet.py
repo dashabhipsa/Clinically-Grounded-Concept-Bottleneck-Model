@@ -572,25 +572,31 @@ def main() -> int:
         n_train, n_val, n_test, len(concept_names), len(mapped), len(unmapped), box_strategy,
     )
 
-    transform = build_transform(image_size, mean, std, train=False, augment=False)
-    logger.info("Materializing deterministic ChestX-Det subsets (first run downloads to .cache on D:)...")
+    augment = bool(base_cfg.get("data.augment", True))
+    train_transform = build_transform(image_size, mean, std, train=True, augment=augment)
+    eval_transform = build_transform(image_size, mean, std, train=False, augment=False)
+    logger.info(
+        "Materializing deterministic ChestX-Det subsets (first run downloads "
+        "to .cache on D:); train augment=%s",
+        augment,
+    )
     train_ds = materialize_split(
         repo_id=repo_id, split="train", offset=0, n=n_train,
-        image_size=image_size, transform=transform,
+        image_size=image_size, transform=train_transform,
         concept_names=concept_names, concept_mapping=concept_mapping,
         box_strategy=box_strategy, min_component_area_fraction=min_area_frac,
         logger=logger,
     )
     val_ds = materialize_split(
         repo_id=repo_id, split="train", offset=n_train, n=n_val,
-        image_size=image_size, transform=transform,
+        image_size=image_size, transform=eval_transform,
         concept_names=concept_names, concept_mapping=concept_mapping,
         box_strategy=box_strategy, min_component_area_fraction=min_area_frac,
         logger=logger,
     )
     test_ds = materialize_split(
         repo_id=repo_id, split="test", offset=0, n=n_test,
-        image_size=image_size, transform=transform,
+        image_size=image_size, transform=eval_transform,
         concept_names=concept_names, concept_mapping=concept_mapping,
         box_strategy=box_strategy, min_component_area_fraction=min_area_frac,
         logger=logger,
